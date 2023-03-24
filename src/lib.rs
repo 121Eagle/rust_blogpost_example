@@ -1,12 +1,12 @@
 pub struct Post {
-    state: Option<Box<dyn State>>,
+    state: Option<Box<State>>,
     content: String,
 }
 
 impl Post {
     pub fn new() -> Post {
         Post {
-            state: Some(Box::new(Draft {})),
+            state: Some(Box::new(State::Draft)),
             content: String::new(),
         }
     }
@@ -32,15 +32,36 @@ impl Post {
     }
 }
 
-trait State {
-    fn request_review(self: Box<Self>) -> Box<dyn State>;
-    fn approve(self: Box<Self>) -> Box<dyn State>;
+enum State {
+    Draft,
+    PendingReview,
+    Published,
+}
+
+impl State {
+    fn request_review(self: Box<Self>) -> Box<Self> {
+        match *self {
+            State::Draft => Box::new(State::PendingReview),
+            _ => self,
+        }
+    }
+
+    fn approve(self: Box<Self>) -> Box<Self> {
+        match *self {
+            State::PendingReview => Box::new(State::Published),
+            _ => self,
+        }
+    }
 
     fn content<'a>(&self, post: &'a Post) -> &'a str {
-        ""
+        match self {
+            State::Published => &post.content,
+            _ => "",
+        }
     }
 }
 
+/*
 struct Draft {}
 
 impl State for Draft {
@@ -80,3 +101,4 @@ impl State for Published {
         &post.content
     }
 }
+*/
