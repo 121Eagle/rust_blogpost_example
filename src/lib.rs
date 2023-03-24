@@ -32,6 +32,12 @@ impl Post {
     }
 }
 
+impl Default for Post {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 trait State {
     fn request_review(self: Box<Self>) -> Box<dyn State>;
     fn approve(self: Box<Self>) -> Box<dyn State>;
