@@ -53,6 +53,10 @@ trait State {
     }
 
     fn reject(self: Box<Self>) -> Box<dyn State>;
+
+    fn edit_text<'a>(&self, post_content: &'a mut String) -> Result<&'a mut String, &'static str> {
+        Err("Cannot edit text unless state is draft")
+    }
 }
 
 struct Draft {}
@@ -68,6 +72,10 @@ impl State for Draft {
 
     fn reject(self: Box<Self>) -> Box<dyn State> {
         self
+    }
+
+    fn edit_text<'a>(&self, post_content: &'a mut String) -> Result<&'a mut String, &'static str> {
+        Ok(post_content)
     }
 }
 
