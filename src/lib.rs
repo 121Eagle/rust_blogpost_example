@@ -59,7 +59,7 @@ struct Draft {}
 
 impl State for Draft {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview {})
+        Box::new(PendingReview { approvals: 0u8 })
     }
 
     fn approve(self: Box<Self>) -> Box<dyn State> {
@@ -71,7 +71,9 @@ impl State for Draft {
     }
 }
 
-struct PendingReview {}
+struct PendingReview {
+    approvals: u8,
+}
 
 impl State for PendingReview {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
@@ -79,7 +81,16 @@ impl State for PendingReview {
     }
 
     fn approve(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Published {})
+        const NEEDED_APPROVALS: u8 = 2u8;
+
+        let approval_count = self.approvals;
+        if approval_count < NEEDED_APPROVALS {
+            Box::new(Self {
+                approvals: approval_count + 1u8,
+            })
+        } else {
+            Box::new(Published {})
+        }
     }
 
     fn reject(self: Box<Self>) -> Box<dyn State> {
