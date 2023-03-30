@@ -1,18 +1,22 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 pub struct Post {
     state: Option<Box<dyn State>>,
-    content: String,
+    content: Rc<RefCell<String>>,
 }
 
 impl Post {
     pub fn new() -> Post {
+        let content = Rc::new(RefCell::new(String::new()));
         Post {
-            state: Some(Box::new(Draft {})),
-            content: String::new(),
+            state: Some(Box::new(Draft {content: content.clone()})),
+            content,
         }
     }
 
     pub fn add_text(&mut self, text: &str) {
-        self.content.push_str(text);
+        self.content.borrow_mut().push_str(text);
     }
 
     pub fn content(&self) -> &str {
@@ -59,11 +63,13 @@ trait State {
     }
 }
 
-struct Draft {}
+struct Draft {
+    content: Rc<RefCell<String>>
+}
 
 impl State for Draft {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview { approvals: 0u8 })
+        Box::new(PendingReview { approvals: 0u8, content: self.content.clone() })
     }
 
     fn approve(self: Box<Self>) -> Box<dyn State> {
@@ -81,6 +87,7 @@ impl State for Draft {
 
 struct PendingReview {
     approvals: u8,
+    content: Rc<RefCell<String>>
 }
 
 impl State for PendingReview {
@@ -95,6 +102,7 @@ impl State for PendingReview {
         if approval_count < NEEDED_APPROVALS {
             Box::new(Self {
                 approvals: approval_count + 1u8,
+                content: self.content.clone(),
             })
         } else {
             Box::new(Published {})
@@ -102,7 +110,7 @@ impl State for PendingReview {
     }
 
     fn reject(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Draft {})
+        Box::new(Draft {content: self.content.clone()})
     }
 }
 
@@ -118,7 +126,7 @@ impl State for Published {
     }
 
     fn content<'a>(&self, post: &'a Post) -> &'a str {
-        &post.content
+        &*post.content()
     }
 
     fn reject(self: Box<Self>) -> Box<dyn State> {
