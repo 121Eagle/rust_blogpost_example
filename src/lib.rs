@@ -58,15 +58,33 @@ pub struct PendingReviewPost {
     content: String,
 }
 
+pub struct ReviewdPost {
+    content: String,
+}
+
 impl PendingReviewPost {
-    pub fn approve(self) -> Post {
-        Post {
+    pub fn approve(self) -> ReviewedPost {
+        ReviewdPost {
             content: self.content,
         }
     }
 
     pub fn reject(self) -> DraftPost {
         DraftPost {
+            content: self.content,
+        }
+    }
+}
+
+impl ReviewdPost {
+    pub fn approve(self) -> Post {
+        Post {
+            content: self.content,
+        }
+    }
+
+    pub fn reject(self) -> ReviewdPost {
+        ReviewdPost {
             content: self.content,
         }
     }
