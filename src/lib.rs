@@ -1,24 +1,22 @@
 pub struct Post {
-    state: Option<Box<dyn State>>,
+    content: String,
+}
+
+pub struct DraftPost{
     content: String,
 }
 
 impl Post {
-    pub fn new() -> Post {
-        Post {
-            state: Some(Box::new(Draft {})),
+    pub fn new() -> DraftPost {
+        DraftPost {
             content: String::new(),
         }
     }
 
-    pub fn add_text(&mut self, text: &str) {
-        self.content.push_str(text);
-    }
-
     pub fn content(&self) -> &str {
-        self.state.as_ref().unwrap().content(self)
+        &self.content
     }
-
+/*
     pub fn request_review(&mut self) {
         if let Some(s) = self.state.take() {
             self.state = Some(s.request_review())
@@ -30,14 +28,10 @@ impl Post {
             self.state = Some(s.approve())
         }
     }
+*/
 }
 
-impl Default for Post {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
+/*
 trait State {
     fn request_review(self: Box<Self>) -> Box<dyn State>;
     fn approve(self: Box<Self>) -> Box<dyn State>;
@@ -46,21 +40,33 @@ trait State {
         ""
     }
 }
+*/
 
-struct Draft {}
-
-impl State for Draft {
-    fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview {})
+impl DraftPost {
+    pub fn add_text(&mut self, text: &str) {
+        self.content.push_str(text)
     }
 
-    fn approve(self: Box<Self>) -> Box<dyn State> {
-        self
+    pub fn request_review(self) -> PendingReviewPost {
+        PendingReviewPost {
+            content: self.content,
+        }
     }
 }
 
-struct PendingReview {}
+pub struct PendingReviewPost {
+    content: String,
+}
 
+impl PendingReviewPost {
+    pub fn approve(self) -> Post {
+        Post {
+            content: self.content,
+        }
+    }
+}
+
+/*
 impl State for PendingReview {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         self
@@ -86,3 +92,4 @@ impl State for Published {
         &post.content
     }
 }
+*/
